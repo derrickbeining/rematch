@@ -15,10 +15,11 @@ export type ExtractRematchStateFromModels<M extends Models> = {
 export type RematchRootState<M extends Models> = ExtractRematchStateFromModels<M>
 
 export type ExtractRematchDispatcherAsyncFromEffect<E> =
-  E extends () => Promise<any> ? RematchDispatcherAsync<void, void> :
-  E extends (payload: infer P) => Promise<any> ? RematchDispatcherAsync<P, void> :
-  E extends (payload: infer P, meta: infer M) => Promise<any> ? RematchDispatcherAsync<P, void> :
-  RematchDispatcherAsync<any, any>
+  E extends () => any ? E : 
+  E extends (payload: any) => any ? E : 
+  E extends (payload: infer P, rootState: any) => infer Ret ? (payload: P) => Ret : 
+  E extends (payload: infer P, rootState: any, meta: infer M) => infer Ret ? (payload: P, meta: M) => Ret : 
+  (nope: any[]) => never;
 
 export type ExtractRematchDispatchersFromEffectsObject<effects extends ModelEffects<any>> = {
   [effectKey in keyof effects]: ExtractRematchDispatcherAsyncFromEffect<effects[effectKey]>
@@ -125,11 +126,12 @@ export type ModelReducers<S = any> = {
 
 type ModelEffects<S> = {
   [key: string]: (
-    this: { [key: string]: (payload?: any, meta?: any) => Action<any, any> },
+    this: {[key: string]: (payload?: any, meta?: any) => Action<any, any>},
     payload: any,
-    rootState: S
-  ) => void
-}
+    rootState: S,
+    meta: any
+  ) => void;
+};
 
 export type Models = {
   [key: string]: ModelConfig,
